@@ -1,65 +1,126 @@
-import Image from "next/image";
+"use client"
+
+import React, {useState, useEffect} from "react";
+import Link from "next/link";
+import Status from "../components/StatusLabels"
+import DashboardShell from "../components/DashboardShell";
+import { getSupabaseClient } from "../lib/supabase";
+import { formatSubmissionDate } from "../lib/submissions";
+import { Submission } from "../lib/types";
+
+import { BiChevronDown } from "react-icons/bi";
+import { FiSearch } from "react-icons/fi";
+
+const formatDate = (date: string) => {
+  const { datePart, timePart } = formatSubmissionDate(date);
+  return (
+    <div>
+      {datePart} <br /> at {timePart}
+    </div>
+  );
+};
 
 export default function Home() {
+
+  const [submissions, setSubmissions] = useState<Submission[]>([])
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const supabase = getSupabaseClient();
+        const { data: submissions } = await supabase
+          .from("submissions")
+          .select("id, manuscript_number, title, status, created_at, updated_at");
+        setSubmissions(submissions ?? [])
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+    <DashboardShell>
+      <div className="flex gap-x-4 items-center justify-between">
+        <h1 className="title text-primary w-max">
+          Dashboard
+        </h1>
+
+        <div className="flex items-center gap-3 w-max">
+          {searchOpen && (
+            <input
+              type="text"
+              placeholder="Search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              autoFocus
+              className="flex-1 px-4 py-2.5 rounded-md border border-primary bg-white shadow-md outline-none placeholder:text-gray-400"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          )}
+          <div className={`flex items-center gap-3 ${searchOpen ? "" : "ml-auto"}`}>
+            <button
+              type="button"
+              onClick={() => setSearchOpen((open) => !open)}
+              className="flex items-center justify-center size-10 rounded-full bg-primary text-white shadow-md shrink-0 hover:opacity-90"
+              aria-label="Toggle search"
+            >
+              <FiSearch className="w-5 h-5" />
+            </button>
+            <Link
+              href="/new"
+              className="px-5 py-2.5 rounded-md bg-primary text-white shadow-md hover:opacity-90 whitespace-nowrap"
+            >
+              + New submission
+            </Link>
+          </div>
         </div>
-      </main>
-    </div>
+      </div>
+
+      <div className="bg-white w-full shadow-2xl h-full flex flex-col gap-y-4">
+        <div className="flex items-center justify-between w-full p-8">
+          <h2 className="subheading">
+            Your Submissions
+          </h2>
+          <BiChevronDown />
+        </div>
+
+        <div className="overflow-x-auto shadow-lg">
+          <table className="w-full border-collapse text-left">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="px-4 py-3 font-normal">Manuscript #</th>
+                <th className="px-4 py-3 font-normal">Title</th>
+                <th className="px-4 py-3 font-normal">Status</th>
+                <th className="px-4 py-3 font-normal">Created</th>
+                <th className="px-4 py-3 font-normal">Updated</th>
+                <th className="px-4 py-3 font-normal">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {submissions.map((submission) => (
+                <tr key={submission.id} className="bg-white border-t border-gray-100">
+                  <td className="px-4 py-3">{submission.manuscript_number}</td>
+                  <td className="px-4 py-3">{submission.title}</td>
+                  <td className="px-4 py-3"><Status status={submission.status} /></td>
+                  <td className="px-4 py-3">{formatDate(submission.created_at)}</td>
+                  <td className="px-4 py-3">{formatDate(submission.updated_at)}</td>
+                  <td className="px-4 py-3">
+                    <Link
+                      href={`/edit/${submission.id}`}
+                      className="inline-block px-6 py-2 bg-primary rounded-md text-xs text-white font-normal uppercase"
+                    >
+                      Edit
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </DashboardShell>
   );
 }
