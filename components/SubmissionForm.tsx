@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { IoClose } from "react-icons/io5";
 import Status from "./StatusLabels";
 import { formatVersionLabel } from "../lib/submissions";
@@ -37,6 +37,28 @@ type SubmissionFormProps = {
   onSubmit: () => void;
 };
 
+function validateForm(form: FormState): string | null {
+  if (!form.research_object_type.trim()) {
+    return "Type of research object is required.";
+  }
+  if (!form.title.trim()) {
+    return "Title is required.";
+  }
+  if (!form.doi.trim()) {
+    return "DOI is required.";
+  }
+  if (!form.abstract.trim()) {
+    return "Abstract is required.";
+  }
+  for (let i = 0; i < form.authors.length; i++) {
+    const author = form.authors[i];
+    if (!author.authorName.trim() || !author.affiliation.trim()) {
+      return `Author ${i + 1}: name and affiliation are required.`;
+    }
+  }
+  return null;
+}
+
 export default function SubmissionForm({
   form,
   setForm,
@@ -45,6 +67,17 @@ export default function SubmissionForm({
   onSaveDraft,
   onSubmit,
 }: SubmissionFormProps) {
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const handleSave = (save: () => void) => {
+    const error = validateForm(form);
+    if (error) {
+      setValidationError(error);
+      return;
+    }
+    setValidationError(null);
+    save();
+  };
   return (
     <div className="w-full flex flex-col">
 
@@ -176,12 +209,14 @@ export default function SubmissionForm({
               Please provide a short summary of your submission
             </p>
           </div>
-          {saveError && <p className="text-red-600 text-sm">{saveError}</p>}
+          {(validationError || saveError) && (
+            <p className="text-red-600 text-sm">{validationError ?? saveError}</p>
+          )}
           <div className="flex justify-end gap-4 pt-4">
             <button
               type="button"
               disabled={saving}
-              onClick={onSaveDraft}
+              onClick={() => handleSave(onSaveDraft)}
               className="px-8 py-2.5 rounded-md border border-gray-300 text-gray-600 bg-white disabled:opacity-50"
             >
               Save Draft
@@ -189,7 +224,7 @@ export default function SubmissionForm({
             <button
               type="button"
               disabled={saving}
-              onClick={onSubmit}
+              onClick={() => handleSave(onSubmit)}
               className="px-8 py-2.5 rounded-md bg-primary text-white disabled:opacity-50"
             >
               {saving ? "Saving..." : "Submit"}
