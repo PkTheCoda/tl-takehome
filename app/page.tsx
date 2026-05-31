@@ -7,9 +7,10 @@ import DashboardShell from "../components/DashboardShell";
 import { getSupabaseClient } from "../lib/supabase";
 import { formatSubmissionDate } from "../lib/submissions";
 import { Submission } from "../lib/types";
+import { HiOutlineAdjustments } from "react-icons/hi";
 
 import { BiChevronDown } from "react-icons/bi";
-import { FiSearch } from "react-icons/fi";
+import { FiFilter, FiSearch } from "react-icons/fi";
 
 const formatDate = (date: string) => {
   const { datePart, timePart } = formatSubmissionDate(date);
@@ -20,20 +21,84 @@ const formatDate = (date: string) => {
   );
 };
 
+const STATUS_FILTERS = [
+  { label: "Status", value: "all" },
+  { label: "Unsubmitted", value: "unsubmitted" },
+  { label: "Submitted", value: "submitted" },
+  { label: "Published", value: "published" },
+];
+
+function applyFilters(
+  items: Submission[],
+  query: string,
+  status: string
+) {
+  return items.filter((submission) => {
+    const matchesSearch =
+      query === "" ||
+      submission.title.toLowerCase().includes(query.toLowerCase());
+    const matchesStatus =
+      status === "all" ||
+      submission.status.trim().toLowerCase() === status;
+    return matchesSearch && matchesStatus;
+  });
+}
+
+function sortByCreated(
+  items: Submission[],
+  createdSort: "asc" | null
+) {
+  if (createdSort !== "asc") return items;
+
+  return [...items].sort(
+    (a, b) =>
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  );
+}
+
+function getDisplayedSubmissions(
+  items: Submission[],
+  query: string,
+  status: string,
+  createdSort: "asc" | null
+) {
+  return sortByCreated(applyFilters(items, query, status), createdSort);
+}
+
 export default function Home() {
 
   const [submissions, setSubmissions] = useState<Submission[]>([])
+  const [allSubmissions, setAllSubmissions] = useState<Submission[]>([])
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [createdSort, setCreatedSort] = useState<"asc" | null>(null)
+
+  function handleSearchFiltering(target: string) {
+    setSearchQuery(target)
+    setSubmissions(getDisplayedSubmissions(allSubmissions, target, statusFilter, createdSort))
+  }
+
+  function handleStatusFiltering(status: string) {
+    setStatusFilter(status)
+    setSubmissions(getDisplayedSubmissions(allSubmissions, searchQuery, status, createdSort))
+  }
+
+  function toggleCreatedSort() {
+    const nextSort = createdSort === "asc" ? null : "asc"
+    setCreatedSort(nextSort)
+    setSubmissions(getDisplayedSubmissions(allSubmissions, searchQuery, statusFilter, nextSort))
+  }
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const supabase = getSupabaseClient();
-        const { data: submissions } = await supabase
+        const { data } = await supabase
           .from("submissions")
           .select("id, manuscript_number, title, status, created_at, updated_at");
-        setSubmissions(submissions ?? [])
+        setSubmissions(getDisplayedSubmissions(data ?? [], searchQuery, statusFilter, createdSort))
+        setAllSubmissions(data ?? [])
       } catch (error) {
         console.error(error);
       }
@@ -55,7 +120,7 @@ export default function Home() {
               type="text"
               placeholder="Search"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchFiltering(e.target.value)}
               autoFocus
               className="flex-1 px-4 py-2.5 rounded-md border border-primary bg-white shadow-md outline-none placeholder:text-gray-400"
             />
@@ -93,8 +158,35 @@ export default function Home() {
               <tr className="bg-gray-50">
                 <th className="px-4 py-3 font-normal">Manuscript #</th>
                 <th className="px-4 py-3 font-normal">Title</th>
-                <th className="px-4 py-3 font-normal">Status</th>
-                <th className="px-4 py-3 font-normal">Created</th>
+
+                <th className="px-4 py-3 font-normal">
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => handleStatusFiltering(e.target.value)}
+                    className="rounded pl-2 py-1 text-xs bg-gray-50 shadow-inner border border-gray-200 text-slate-700 font-normal"
+                    aria-label="Filter by status"
+                  >
+                    {STATUS_FILTERS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label.toUpperCase()}
+                      </option>
+                    ))}
+                  </select>
+                </th>
+
+                <th className="px-4 py-3 font-normal">
+                  <button
+                    type="button"
+                    onClick={toggleCreatedSort}
+                    className="flex items-center gap-1.5 uppercase text-xs text-slate-700 hover:text-primary hover:cursor-pointer"
+                    aria-label="Sort by created date"
+                  >
+                    Created
+                    <HiOutlineAdjustments
+                      className={`w-3.5 h-3.5 ${createdSort === "asc" ? "text-primary" : ""}`}
+                    />
+                  </button>
+                </th>
                 <th className="px-4 py-3 font-normal">Updated</th>
                 <th className="px-4 py-3 font-normal">Actions</th>
               </tr>
