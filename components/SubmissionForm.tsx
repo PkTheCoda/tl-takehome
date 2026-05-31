@@ -16,6 +16,7 @@ export type FormState = {
   authors: Author[];
 };
 
+// store an empty form -- used for /NEW pages
 export const emptyForm = (): FormState => ({
   title: "",
   status: "Unsubmitted",
@@ -26,6 +27,7 @@ export const emptyForm = (): FormState => ({
   authors: [{ authorName: "", affiliation: "" }],
 });
 
+// props for submission
 type SubmissionFormProps = {
   form: FormState;
   setForm: Dispatch<SetStateAction<FormState>>;

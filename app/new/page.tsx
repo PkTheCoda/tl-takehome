@@ -39,6 +39,7 @@ export default function NewSubmissionPage() {
           status: submit ? "Submitted" : "Unsubmitted",
           created_at: now,
           updated_at: now,
+          abstract: form.abstract
         })
         .select("id");
 

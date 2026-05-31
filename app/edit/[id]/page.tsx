@@ -30,7 +30,7 @@ export default function EditSubmissionPage() {
         const supabase = getSupabaseClient();
         const { data, error } = await supabase
           .from("submissions")
-          .select("title, status, updated_at, created_at, author")
+          .select("title, status, updated_at, created_at, author, abstract")
           .eq("id", id)
           .maybeSingle();
 
@@ -44,6 +44,7 @@ export default function EditSubmissionPage() {
           title: data.title ?? "",
           status: data.status ?? "",
           updated_at: data.updated_at ?? data.created_at ?? "",
+          abstract: data.abstract ?? "",
           authors:
             Array.isArray(data.author) && data.author.length > 0
               ? data.author
@@ -70,7 +71,7 @@ export default function EditSubmissionPage() {
 
       const { data, error } = await supabase
         .from("submissions")
-        .update({ title: form.title, author: form.authors, status, updated_at })
+        .update({ title: form.title, author: form.authors, status, updated_at, abstract: form.abstract })
         .eq("id", id)
         .select("id");
 
