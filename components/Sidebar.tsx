@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ReactNode } from "react";
 import { FiHome, FiCheckSquare } from "react-icons/fi";
 import { LuUsersRound } from "react-icons/lu";
@@ -11,11 +12,11 @@ const navItems: Array<{
   icon?: ReactNode;
 }> = [
   { label: "Dashboard", href: "/", icon: <FiHome className="w-5 h-5" /> },
-  { label: "Forms", href: "#", icon: <FiCheckSquare className="w-5 h-5" /> },
-  { label: "Users", href: "#", icon: <LuUsersRound className="w-5 h-5" /> },
-  { label: "Manuscripts", href: "#", icon: <IoDocumentTextOutline className="w-5 h-5" /> },
-  { label: "Reports", href: "#", icon: <TbActivityHeartbeat className="w-5 h-5" /> },
-  { label: "My profile", href: "#", icon: <CiUser className="w-5 h-5" /> },
+  { label: "Forms", href: "/forms", icon: <FiCheckSquare className="w-5 h-5" /> },
+  { label: "Users", href: "/users", icon: <LuUsersRound className="w-5 h-5" /> },
+  { label: "Manuscripts", href: "/manuscripts", icon: <IoDocumentTextOutline className="w-5 h-5" /> },
+  { label: "Reports", href: "/reports", icon: <TbActivityHeartbeat className="w-5 h-5" /> },
+  { label: "My profile", href: "/profile", icon: <CiUser className="w-5 h-5" /> },
 ];
 
 export default function Sidebar() {
@@ -47,14 +48,14 @@ export default function Sidebar() {
 
       <nav className="flex flex-wrap justify-between lg:flex-col gap-2 w-full">
         {navItems.map((nav, idx) => (
-          <a
+          <Link
             key={nav.label + idx}
             href={nav.href}
             className="flex items-center gap-2 px-2 py-1 link"
           >
             {nav.icon}
             {nav.label}
-          </a>
+          </Link>
         ))}
       </nav>
     </div>
