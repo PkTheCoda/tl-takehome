@@ -10,7 +10,7 @@ import { Submission } from "../lib/types";
 import { HiOutlineAdjustments } from "react-icons/hi";
 
 import { BiChevronDown } from "react-icons/bi";
-import { FiFilter, FiSearch } from "react-icons/fi";
+import { FiSearch } from "react-icons/fi";
 
 const formatDate = (date: string) => {
   const { datePart, timePart } = formatSubmissionDate(date);
@@ -73,6 +73,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [createdSort, setCreatedSort] = useState<"asc" | null>(null)
+  const [loading, setLoading] = useState(true)
 
   function handleSearchFiltering(target: string) {
     setSearchQuery(target)
@@ -101,6 +102,8 @@ export default function Home() {
         setAllSubmissions(data ?? [])
       } catch (error) {
         console.error(error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -192,23 +195,40 @@ export default function Home() {
               </tr>
             </thead>
             <tbody>
-              {submissions.map((submission) => (
-                <tr key={submission.id} className="bg-white border-t border-gray-100">
-                  <td className="px-4 py-3">{submission.manuscript_number}</td>
-                  <td className="px-4 py-3">{submission.title}</td>
-                  <td className="px-4 py-3"><Status status={submission.status} /></td>
-                  <td className="px-4 py-3">{formatDate(submission.created_at)}</td>
-                  <td className="px-4 py-3">{formatDate(submission.updated_at)}</td>
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/edit/${submission.id}`}
-                      className="inline-block px-6 py-2 bg-primary rounded-md text-xs text-white font-normal uppercase"
-                    >
-                      Edit
-                    </Link>
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-12 text-center">
+                    <div
+                      className="inline-block size-6 border-2 border-primary border-t-transparent rounded-full animate-spin"
+                      aria-label="Loading submissions"
+                    />
                   </td>
                 </tr>
-              ))}
+              ) : submissions.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-12 text-center text-gray-500">
+                    No submissions found.
+                  </td>
+                </tr>
+              ) : (
+                submissions.map((submission) => (
+                  <tr key={submission.id} className="bg-white border-t border-gray-100">
+                    <td className="px-4 py-3">{submission.manuscript_number}</td>
+                    <td className="px-4 py-3">{submission.title}</td>
+                    <td className="px-4 py-3"><Status status={submission.status} /></td>
+                    <td className="px-4 py-3">{formatDate(submission.created_at)}</td>
+                    <td className="px-4 py-3">{formatDate(submission.updated_at)}</td>
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/edit/${submission.id}`}
+                        className="inline-block px-6 py-2 bg-primary rounded-md text-xs text-white font-normal uppercase"
+                      >
+                        Edit
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
