@@ -112,7 +112,8 @@ export default function Home() {
 
   return (
     <DashboardShell>
-      <div className="flex gap-x-4 items-center justify-between">
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+
         <h1 className="title text-primary w-max">
           Dashboard
         </h1>

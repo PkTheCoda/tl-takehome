@@ -21,7 +21,9 @@ const navItems: Array<{
 export default function Sidebar() {
   return (
     <div className="col-span-1 bg-primary p-6 text-white h-full flex flex-col items-start gap-6">
+
       <div className="flex items-center gap-4 w-full mt-2">
+
         <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="24" cy="24" r="24" fill="#E8E8E8" />
           <mask id="mask0_2845_181" maskUnits="userSpaceOnUse" x="0" y="0" width="48" height="48">
@@ -40,9 +42,10 @@ export default function Sidebar() {
             <span>Offline</span>
           </div>
         </div>
+
       </div>
 
-      <nav className="flex flex-col gap-2 w-full">
+      <nav className="flex flex-wrap justify-between lg:flex-col gap-2 w-full">
         {navItems.map((nav, idx) => (
           <a
             key={nav.label + idx}
